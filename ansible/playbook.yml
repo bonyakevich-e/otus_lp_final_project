@@ -1,6 +1,7 @@
 ---
 
 - name: balancer
+  tags: balancer
   hosts: balancer
   become: yes
   roles:
@@ -61,6 +62,13 @@
   tags: monitoring
   roles:
     - monitoring
+
+- name: logserver
+  hosts: logserver
+  become: yes
+  tags: logserver
+  roles:
+    - logserver
 
 - name: backup
   hosts: backup

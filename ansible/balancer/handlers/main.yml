@@ -1,2 +1,7 @@
 ---
 # handlers file for balancer
+
+- name: restart rsyslog
+  ansible.builtin.service:
+    name: rsyslog
+    state: restarted

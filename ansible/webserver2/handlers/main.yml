@@ -9,4 +9,8 @@
 - name: enable nextcloud vhost
   ansible.builtin.shell: /usr/sbin/a2ensite nextcloud.conf
 
+- name: restart rsyslog
+  ansible.builtin.service:
+    name: rsyslog
+    state: restarted
 

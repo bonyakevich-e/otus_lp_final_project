@@ -40,3 +40,11 @@
     state: restarted
     enabled: true
 
+- name: edit rsyslog config
+  tags: edit_rsyslog_config
+  ansible.builtin.lineinfile:
+    path: /etc/rsyslog.conf
+    line: "*.* @@192.168.56.70:514"
+    state: present
+  notify: restart rsyslog
+

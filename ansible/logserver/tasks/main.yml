@@ -1,0 +1,13 @@
+---
+# tasks file for logserver
+
+- name: Set timezone to Europe/Moscow
+  become: yes
+  community.general.timezone:
+    name: Europe/Moscow
+
+- name: edit rsyslog config
+  ansible.builtin.template:
+    src: rsyslog.conf
+    dest: /etc/rsyslog.conf
+  notify: restart rsyslog

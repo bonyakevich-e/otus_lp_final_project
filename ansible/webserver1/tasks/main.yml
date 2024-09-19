@@ -56,12 +56,22 @@
     state: mounted
     fstype: nfs
 
-- name: add apache virtual host for nextcloud
+- name: modify apache configuraion
   tags: add_vhost_on_webserver1
   ansible.builtin.template:
-    src: nextcloud.conf.j2
+    src: "{{ item }}"
     dest: /etc/apache2/sites-available/nextcloud.conf
   notify:
     - enable nextcloud vhost
     - restart apache2
+  with_items:
+    - nextcloud.conf.j2
+    - apache2.conf
 
+- name: edit rsyslog config
+  tags: edit_rsyslog_config
+  ansible.builtin.lineinfile:
+    path: /etc/rsyslog.conf
+    line: "*.* @@192.168.56.70:514"
+    state: present
+  notify: restart rsyslog

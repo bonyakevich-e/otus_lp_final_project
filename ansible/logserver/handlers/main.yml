@@ -1,5 +1,5 @@
 ---
-# handlers file for storage
+# handlers file for logserver
 
 - name: restart rsyslog
   ansible.builtin.service:

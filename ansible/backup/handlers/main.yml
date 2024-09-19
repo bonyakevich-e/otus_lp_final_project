@@ -1,2 +1,7 @@
 ---
 # handlers file for backup
+
+- name: restart rsyslog
+  ansible.builtin.service:
+    name: rsyslog
+    state: restarted
