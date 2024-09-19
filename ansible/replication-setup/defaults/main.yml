@@ -1,0 +1,4 @@
+---
+# defaults file for replication-setup
+
+mysql_root_password: '!Otus2024'

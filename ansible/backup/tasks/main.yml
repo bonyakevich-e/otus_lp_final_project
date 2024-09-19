@@ -1,0 +1,84 @@
+---
+# tasks file for backup
+- name: Set timezone to Europe/Moscow
+  become: yes
+  community.general.timezone:
+    name: Europe/Moscow
+
+- name: install mariadb-client
+  ansible.builtin.apt:
+    name:
+      - mariadb-client
+    state: present
+    update_cache: true
+
+- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+  community.crypto.openssh_keypair:
+    path: /root/.ssh/id_rsa
+
+- name: fetch all public ssh keys
+  tags: fetch_backup_ssh_key
+  shell: cat ~/.ssh/id_rsa.pub
+  register: backup_ssh_key
+
+- name: deploy backup ssh key to webserver1
+  tags: deploy_backup_key_to_webserver1
+  delegate_to: webserver1
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ backup_ssh_key.stdout }}"
+    comment: "backup-server"
+
+- name: deploy backup ssh key to webserver2
+  tags: deploy_backup_key_to_webserver2
+  delegate_to: webserver2
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ backup_ssh_key.stdout }}"
+    comment: "backup-server"
+
+- name: deploy backup ssh key to dbmaster
+  tags: deploy_backup_key_to_dbmaster
+  delegate_to: dbmaster
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ backup_ssh_key.stdout }}"
+    comment: "backup-server"
+
+- name: deploy backup ssh key to storage
+  tags: deploy_backup_key_to_storage
+  delegate_to: storage
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ backup_ssh_key.stdout }}"
+    comment: "backup-server"
+
+- name: create a directory for backup
+  ansible.builtin.file:
+    path: /backup/nextcloud
+    state: directory
+    mode: '0755'
+    recurse: yes
+
+- name: create a directory for scripts
+  ansible.builtin.file:
+    path: /opt/scripts
+    state: directory
+    mode: '0755'
+    recurse: yes
+
+- name: copy backup script to backup-server
+  ansible.builtin.template:
+    src: nextcloud_backup.bash
+    dest: /opt/scripts/
+    mode: u=rwx,g=rx,o=r 
+
+- name: copy cron task to backup-server
+  ansible.builtin.template:
+    src: nextcloud_backup.cron
+    dest: /etc/cron.d/nextcloud_backup
+    mode: u=rw,g=r,o=r

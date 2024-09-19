@@ -1,0 +1,4 @@
+---
+# defaults file for dbslave
+
+mysql_root_password: '!Otus2024'

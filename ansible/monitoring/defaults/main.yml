@@ -1,0 +1,5 @@
+---
+# defaults file for monitoring
+mysql_root_password: '!Otus2024'
+zabbix_user_name: 'zabbix'
+zabbix_user_password: '!Otus2024'

@@ -1,0 +1,148 @@
+---
+# tasks file for replication-setup
+
+- name: getting backup from master
+  ansible.builtin.command: "mariabackup --backup --target-dir=/tmp/full_backup --user=root --password={{ mysql_root_password }} --parallel=4"
+  when: (ansible_hostname == "dbmaster")
+
+    #- name: compress backups
+    #community.general.archive:
+    #path: /tmp/full_backup
+    #dest: /tmp/full_backup.tar.gz
+    #format: gz
+    #when: (ansible_hostname == "dbmaster")
+
+- name: fetch all public ssh keys
+  shell: cat ~/.ssh/id_rsa.pub
+  register: dbmaster_ssh_key
+  when: (ansible_hostname == "dbmaster")
+
+- name: deploy dbmaster ssh key on slave
+  delegate_to: dbslave
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ dbmaster_ssh_key.stdout }}"
+    comment: "{{ansible_hostname}}"
+  when: (ansible_hostname == "dbmaster")
+
+    #- name: copy database's backup from master to slave
+    #ansible.posix.synchronize:
+    #src: /tmp/full_backup
+    #dest: /tmp/
+    #delegate_to: dbmaster
+    #when: (ansible_hostname == "dbslave")
+
+- name: copy database's backup from master to slave
+  command: "scp -r -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/full_backup root@192.168.56.41:/tmp/"
+  when: (ansible_hostname == "dbmaster")
+
+- name: delete just maded backup
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/full_backup/
+  when: (ansible_hostname == "dbmaster")
+
+- name: stop mariadb-server on dbslave
+  ansible.builtin.service:
+    name: mariadb
+    state: stopped
+  when: (ansible_hostname == "dbslave")
+
+- name: collect old files from /var/lib/mysql for future deleting
+  ansible.builtin.find:
+    paths: /var/lib/mysql/
+    hidden: true
+    recurse: true
+    file_type: any
+  register: collected_files
+  when: (ansible_hostname == "dbslave")
+
+    #- name: debug
+    #debug: "msg={{ collected_files }}"
+
+- name: remove collected files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ collected_files.files }}"
+  no_log: true
+  when: (ansible_hostname == "dbslave")
+
+- name: prepare backup files
+  command: "mariabackup --prepare --target-dir=/tmp/full_backup"
+  when: (ansible_hostname == "dbslave")
+
+- name: copy backup files to data directory
+  command: "mariabackup --copy-back --target-dir=/tmp/full_backup"
+  when: (ansible_hostname == "dbslave")
+
+- name: Change file ownership, group and permissions
+  ansible.builtin.file:
+    path: /var/lib/mysql
+    state: directory
+    owner: mysql
+    group: mysql
+    recurse: yes
+  when: (ansible_hostname == "dbslave")
+
+- name: delete backups on slave
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/full_backup/
+  when: (ansible_hostname == "dbslave")
+
+- name: start mariadb-server on dbslave
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+  when: (ansible_hostname == "dbslave")
+
+- name: fetch GTID identificator
+  shell: "cat /var/lib/mysql/xtrabackup_info | grep GTID | grep -Eo '[[:digit:]]*-[[:digit:]]*-[[:digit:]]*'" 
+  register: gtid_slave_pos
+  when: (ansible_hostname == "dbslave")
+
+- name: set grid_slave_pos
+  community.mysql.mysql_query:
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    query:
+      - "STOP SLAVE"
+      - "RESET SLAVE"
+      - "RESET SLAVE ALL"
+      - "SET global gtid_slave_pos='{{ gtid_slave_pos.stdout }}'"
+  when: (ansible_hostname == "dbslave")
+
+- name: change master to ...
+  community.mysql.mysql_query:
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    query:
+      - "CHANGE MASTER TO MASTER_HOST='192.168.56.40', MASTER_USER='repl', MASTER_PASSWORD='!Otus2024', MASTER_PORT=3306, MASTER_USE_GTID = slave_pos, MASTER_CONNECT_RETRY=10"
+  when: (ansible_hostname == "dbslave")
+
+- name: set read_only on slave
+  community.mysql.mysql_query:
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    query:
+      - "SET global read_only=1"
+  when: (ansible_hostname == "dbslave")
+
+- name: start slave
+  community.mysql.mysql_query:
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    query:
+      - "START SLAVE"
+  when: (ansible_hostname == "dbslave")
+
+
+
+
+        #- name: set gtid_slave_pos
+        #  shell: >
+        #    "mysql -u root -h localhost -p {{ mysql_root_password }}
+        #    -e 'STOP SLAVE; RESET SLAVE; RESET SLAVE ALL; RESET MASTER; SET global gtid_slave_pos='{{ gtid_slave_pos.stdout }}''"
+        #  when: (ansible_hostname == "dbslave")

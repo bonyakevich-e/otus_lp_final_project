@@ -1,0 +1,70 @@
+---
+
+- name: balancer
+  hosts: balancer
+  become: yes
+  roles:
+    - balancer
+
+- name: storage
+  hosts: storage
+  become: yes
+  tags: storage
+  roles:
+    - storage
+
+- name: dbmaster
+  hosts: dbmaster
+  become: yes
+  tags: dbmaster
+  roles:
+    - dbmaster
+
+- name: dbslave
+  hosts: dbslave
+  become: yes
+  tags: dbslave
+  roles:
+    - dbslave
+
+- name: replication-setup
+  hosts: dbslave, dbmaster
+  become: yes
+  tags: replication-setup
+  roles: 
+    - replication-setup
+
+- name: webserver1
+  hosts: webserver1
+  become: yes
+  tags: webserver1
+  roles:
+    - webserver1
+
+- name: webserver2
+  hosts: webserver2
+  become: yes
+  tags: webserver2
+  roles:
+    - webserver2
+
+- name: nextcloud-setup
+  hosts: webserver1,webserver2,storage
+  become: yes
+  tags: nextcloud-setup
+  roles:
+    - nextcloud-setup
+
+- name: monitoring
+  hosts: monitoring
+  become: yes
+  tags: monitoring
+  roles:
+    - monitoring
+
+- name: backup
+  hosts: backup
+  become: yes
+  tags: backup
+  roles:
+    - backup

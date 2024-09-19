@@ -1,0 +1,33 @@
+---
+# tasks file for storage
+#
+- name: Set timezone to Europe/Moscow
+  become: yes
+  community.general.timezone:
+    name: Europe/Moscow
+
+- name: install nfs-server
+  ansible.builtin.apt:
+    name: 
+      - nfs-kernel-server
+    state: present
+    update_cache: true
+
+- name: create storage directory
+  ansible.builtin.file:
+    path: /storage/webserver
+    state: directory
+
+- name: copy exports file
+  ansible.builtin.template:
+    src: exports.j2
+    dest: "/etc/exports"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+- name: exportfs -a
+  ansible.builtin.shell: exportfs -a
+
+
+

@@ -1,0 +1,126 @@
+---
+# tasks file for dbmaster
+- name: Set timezone to Europe/Moscow
+  become: yes
+  community.general.timezone:
+    name: Europe/Moscow
+
+- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+  community.crypto.openssh_keypair:
+    path: /root/.ssh/id_rsa
+
+- name: Install pip
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+    update_cache: true
+
+- name: Install PyMySQL
+  pip:
+    name: pymysql
+    state: present
+
+- name: install mariadb
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - mariadb-backup
+      - mariadb-client
+    state: present
+    update_cache: true
+
+- name: enable mariadb
+  ansible.builtin.service:
+    name: mariadb
+    enabled: true
+
+- name: copy mariadb settings file
+  ansible.builtin.template:
+    src: 50-server.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+    mode: '0600'
+  notify: restart mariadb
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: Check if mysql root password was not set
+  shell: >
+    mysql -u root
+    -h localhost
+    -e "quit"
+  changed_when: false
+  ignore_errors: true
+  register: check_passwd_root
+
+- name: Set MariaDB root password
+  community.mysql.mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    login_user: root
+    login_unix_socket: "/run/mysqld/mysqld.sock"
+    state: present
+  when: check_passwd_root.rc == 0
+
+- name: Removes all anonymous user accounts
+  community.mysql.mysql_user:
+    name: ''
+    host_all: true
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  notify: flush privileges
+
+- name: Remove test database
+  mysql_db:
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+    db: "test"
+    state: absent
+  notify: flush privileges
+
+- name: create replication user
+  community.mysql.mysql_user:
+    name: "{{ repl_user_name }}"
+    password: "{{ repl_user_password }}"
+    priv: '*.*:RELOAD,SUPER,REPLICATION SLAVE,REPLICATION CLIENT'
+    host: '192.168.56.41'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  notify: flush privileges
+
+- name: create backup user
+  tags: create_backup_user
+  community.mysql.mysql_user:
+    name: "{{ backup_user_name }}"
+    password: "{{ backup_user_password }}"
+    priv: '*.*:ALL'
+    host: '%'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  notify: flush privileges
+
+- name: create nextcloud database
+  community.mysql.mysql_db:
+    name: nextcloud
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: create nextcloud user
+  tags: create_nextcloud_user
+  community.mysql.mysql_user:
+    name: "{{ nextcloud_user_name }}"
+    password: "{{ nextcloud_user_password }}"
+    priv: 'nextcloud.*:ALL'
+    host: '%'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  notify: flush privileges
+
+

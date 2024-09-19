@@ -1,0 +1,42 @@
+---
+# tasks file for balancer
+#
+- name: Set timezone to Europe/Moscow
+  become: yes
+  community.general.timezone:
+    name: Europe/Moscow
+
+- name: include vars 
+  ansible.builtin.include_vars: 
+    file: baltbereg_com.pem.yml
+
+- name: install haproxy
+  ansible.builtin.apt: 
+    name: 
+      - haproxy
+    state: present
+    update_cache: true
+
+
+- name: Copy private SSL certificates from Ansible Vault
+  ansible.builtin.copy:
+    content: "{{ ssl_certificate }}"
+    dest: "/etc/ssl/private/baltbereg.com.pem"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o="
+
+- name: Copy haproxy.cfg
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: "/etc/haproxy/haproxy.cfg"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+
+- name: restart haproxy
+  ansible.builtin.service:
+    name: haproxy
+    state: restarted
+    enabled: true
+

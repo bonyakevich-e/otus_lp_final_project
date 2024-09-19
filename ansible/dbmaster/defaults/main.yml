@@ -1,0 +1,10 @@
+---
+# defaults file for dbmaster
+
+mysql_root_password: '!Otus2024'
+repl_user_name: "repl"
+repl_user_password: "!Otus2024"
+nextcloud_user_name: "nextcloud"
+nextcloud_user_password: "!Otus2024"
+backup_user_name: "backup"
+backup_user_password: "!Otus2024"

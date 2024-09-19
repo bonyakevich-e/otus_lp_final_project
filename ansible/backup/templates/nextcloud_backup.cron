@@ -1,0 +1,1 @@
+0 1 * * *	root	/opt/scripts/nextcloud_backup.bash 
