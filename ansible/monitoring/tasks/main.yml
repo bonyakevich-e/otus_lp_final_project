@@ -80,7 +80,32 @@
     db: "test"
     state: absent
   notify: flush privileges
- 
+
+- name: change "bind-address" to 0.0.0.0
+  tags: mon_change_bind_addr
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: 'bind-address '
+    line: 'bind-address            = 0.0.0.0'
+
+- name: restart mariadb
+  tags: mon_restart_mariadb
+  ansible.builtin.service:
+    name: mariadb
+    state: restarted
+
+- name: create backup user
+  tags: create_backup_user
+  community.mysql.mysql_user:
+    name: "{{ backup_user_name }}"
+    password: "{{ backup_user_password }}"
+    priv: '*.*:ALL'
+    host: '%'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  notify: flush privileges
+
 - name: create zabbix database
   community.mysql.mysql_db:
     name: zabbix
@@ -134,6 +159,14 @@
 
 - name: set dbpassword into zabbix config file
   ansible.builtin.shell: sed -i 's/# DBPassword=/DBPassword={{ zabbix_user_password }}/g' /etc/zabbix/zabbix_server.conf
+
+- name: import zabbix.php.conf
+  ansible.builtin.template:
+    src: zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: www-data
+    group: www-data
+    mode: '0600' 
 
 - name: restart zabbix-server apache2 zabbix-agent
   ansible.builtin.service:

@@ -25,6 +25,7 @@
   notify: restart apache2
 
 - name: Enable recommended apache modules
+  tags: enable_apache2_modules_web2
   community.general.apache2_module:
     state: present
     name: "{{ item }}" 
@@ -55,18 +56,21 @@
     state: mounted
     fstype: nfs
 
-- name: modify apache configuraion
-  tags: add_vhost_on_webserver1
+- name: modify apache2.conf
   ansible.builtin.template:
-    src: "{{ item }}"
+    src: apache2.conf
+    dest: /etc/apache2/apache2.conf
+  notify:
+    - restart apache2
+
+- name: add vhost for nextcloud
+  ansible.builtin.template:
+    src: nextcloud.conf.j2
     dest: /etc/apache2/sites-available/nextcloud.conf
   notify:
     - enable nextcloud vhost
     - restart apache2
-  with_items:
-    - nextcloud.conf.j2
-    - apache2.conf
-
+      
 - name: edit rsyslog config
   tags: edit_rsyslog_config
   ansible.builtin.lineinfile:

@@ -76,3 +76,17 @@
   tags: backup
   roles:
     - backup
+
+- name: nextcloud-restore
+  tags: nextcloud-restore
+  hosts: backup
+  become: yes
+  roles:
+    - nextcloud-restore
+
+- name: zabbix-restore
+  tags: zabbix-restore
+  hosts: backup
+  become: yes
+  roles: 
+    -  zabbix-restore 

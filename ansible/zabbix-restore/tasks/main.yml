@@ -1,0 +1,53 @@
+---
+# tasks file for zabbix-restore
+
+- name: stop zabbix service if running
+  delegate_to: monitoring
+  ansible.builtin.service:
+    name: zabbix-server
+    state: stopped
+
+- name: drop zabbix database if exists
+  delegate_to: monitoring
+  community.mysql.mysql_db:
+    name: zabbix
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: create zabbix database
+  delegate_to: monitoring
+  community.mysql.mysql_db:
+    name: zabbix
+    encoding: utf8mb4
+    collation: utf8mb4_bin
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: copy zabbix backup to monitoring server
+  command: "scp -r -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /backup/zabbix/zabbix-sqlbkp_{{ backup_date }}.bak root@192.168.56.60:/tmp/"
+
+- name: restore zabbix database
+  delegate_to: monitoring
+  community.mysql.mysql_db:
+    name: zabbix
+    state: import
+    target: "/tmp/zabbix-sqlbkp_{{ backup_date }}.bak"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: delete temp backup file on monitoring server
+  delegate_to: monitoring
+  ansible.builtin.file:
+    path: "/tmp/zabbix-sqlbkp_{{ backup_date }}.bak"
+    state: absent
+
+- name: start zabbix-server
+  delegate_to: monitoring
+  ansible.builtin.service:
+    name: zabbix-server
+    state: started
+
+
+

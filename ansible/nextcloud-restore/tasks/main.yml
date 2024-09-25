@@ -1,0 +1,88 @@
+---
+# tasks file for nextcloud-restore
+
+- name: disable vhost on webservers
+  delegate_to: "{{ item }}"
+  ansible.builtin.shell: /usr/sbin/a2dissite nextcloud.conf
+  with_items:
+    - webserver1
+    - webserver2
+
+- name: restart apache2 
+  delegate_to: "{{ item }}"
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+  with_items:
+    - webserver1
+    - webserver2
+
+- name: drop nextcloud database if exist
+  delegate_to: dbmaster
+  community.mysql.mysql_db:
+    name: nextcloud
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: create nextcloud database
+  delegate_to: dbmaster
+  community.mysql.mysql_db:
+    name: nextcloud
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: copy backup to dbmaster
+  command: "scp -r -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /backup/nextcloud/nextcloud-sqlbkp_{{ backup_date }}.bak root@192.168.56.40:/tmp/"
+
+- name: restore nextcloud database
+  delegate_to: dbmaster
+  community.mysql.mysql_db:
+    name: nextcloud
+    state: import
+    target: "/tmp/nextcloud-sqlbkp_{{ backup_date }}.bak"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: delete backup file on dbmaster
+  delegate_to: dbmaster
+  ansible.builtin.file:
+    path: "/tmp/nextcloud-sqlbkp_{{ backup_date }}.bak"
+    state: absent
+
+- name: remove nextcloud data dir
+  delegate_to: storage
+  ansible.builtin.file:
+    path: "/storage/webserver/nextcloud"
+    state: absent
+
+- name: restore data files from backup
+  command: "rsync -Aax -e 'ssh -o StrictHostKeyChecking=no' /backup/nextcloud/nextcloud-dirbkp_{{ backup_date }}/ root@192.168.56.30:/storage/webserver/"
+
+- name: enable vhost on webservers
+  delegate_to: "{{ item }}"
+  ansible.builtin.shell: /usr/sbin/a2ensite nextcloud.conf
+  with_items:
+    - webserver1
+    - webserver2
+
+- name: restart apache2
+  delegate_to: "{{ item }}"
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+  with_items:
+    - webserver1
+    - webserver2
+
+- name: disable nextcloud maintaince mode
+  delegate_to: "{{ item }}"
+  ansible.builtin.shell: 'cd /var/www/nextcloud; sudo -u www-data php occ maintenance:mode --off'
+  with_items:
+    - webserver1
+    - webserver2
+  ignore_errors: true
+

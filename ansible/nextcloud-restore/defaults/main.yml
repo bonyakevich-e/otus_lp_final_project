@@ -1,0 +1,4 @@
+---
+# defaults file for nextcloud-restore
+
+mysql_root_password: '!Otus2024'

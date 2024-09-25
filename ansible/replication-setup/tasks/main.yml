@@ -5,13 +5,6 @@
   ansible.builtin.command: "mariabackup --backup --target-dir=/tmp/full_backup --user=root --password={{ mysql_root_password }} --parallel=4"
   when: (ansible_hostname == "dbmaster")
 
-    #- name: compress backups
-    #community.general.archive:
-    #path: /tmp/full_backup
-    #dest: /tmp/full_backup.tar.gz
-    #format: gz
-    #when: (ansible_hostname == "dbmaster")
-
 - name: fetch all public ssh keys
   shell: cat ~/.ssh/id_rsa.pub
   register: dbmaster_ssh_key
@@ -25,13 +18,6 @@
     key: "{{ dbmaster_ssh_key.stdout }}"
     comment: "{{ansible_hostname}}"
   when: (ansible_hostname == "dbmaster")
-
-    #- name: copy database's backup from master to slave
-    #ansible.posix.synchronize:
-    #src: /tmp/full_backup
-    #dest: /tmp/
-    #delegate_to: dbmaster
-    #when: (ansible_hostname == "dbslave")
 
 - name: copy database's backup from master to slave
   command: "scp -r -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/full_backup root@192.168.56.41:/tmp/"

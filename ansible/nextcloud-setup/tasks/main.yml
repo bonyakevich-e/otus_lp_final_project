@@ -2,16 +2,12 @@
 # tasks file for nextcloud-setup
 #
 - name: Extact nextcloud-29.0.7.tar.bz2 into storage directory
-  tags: storage
   ansible.builtin.unarchive:
     src: nextcloud-29.0.7.tar.bz2
     dest: /storage/webserver
   when: (ansible_hostname == "storage")
 
 - name: change nextcloud files' owner
-  tags: 
-    - storage
-    - ch_nextcloud_owner
   ansible.builtin.file:
     path: /storage/webserver
     state: directory

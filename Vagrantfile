@@ -45,11 +45,15 @@ Vagrant.configure("2") do |config|
       monitoring.vm.network "private_network", ip: "192.168.56.60"
     end
 
+    config.vm.define "logserver" do |logserver|
+      logserver.vm.host_name = "logserver"
+      logserver.vm.network "private_network", ip: "192.168.56.70"
+    end
+
     config.vm.define "backup" do |backup|
       backup.vm.host_name = "backup"
       backup.vm.network "private_network", ip: "192.168.56.50"
     end
-
 
 end
 

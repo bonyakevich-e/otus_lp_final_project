@@ -6,6 +6,12 @@
   community.general.timezone:
     name: Europe/Moscow
 
+- name: install iptables-persistent
+  ansible.builtin.apt:
+    name: iptables-persistent
+    state: present
+    update_cache: true
+
 - name: include vars 
   ansible.builtin.include_vars: 
     file: baltbereg_com.pem.yml
@@ -16,7 +22,6 @@
       - haproxy
     state: present
     update_cache: true
-
 
 - name: Copy private SSL certificates from Ansible Vault
   ansible.builtin.copy:
@@ -48,3 +53,8 @@
     state: present
   notify: restart rsyslog
 
+- name: import iptables rules
+  ansible.builtin.template:
+    src: rules.v4
+    dest: /etc/iptables/rules.v4
+  notify: restore iptables rules 

@@ -3,3 +3,5 @@
 mysql_root_password: '!Otus2024'
 zabbix_user_name: 'zabbix'
 zabbix_user_password: '!Otus2024'
+backup_user_name: 'backup'
+backup_user_password: '!Otus2024'

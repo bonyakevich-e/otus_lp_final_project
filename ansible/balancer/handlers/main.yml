@@ -5,3 +5,9 @@
   ansible.builtin.service:
     name: rsyslog
     state: restarted
+
+- name: restore iptables rules
+  community.general.iptables_state:
+    state: restored
+    path: /etc/iptables/rules.v4
+
