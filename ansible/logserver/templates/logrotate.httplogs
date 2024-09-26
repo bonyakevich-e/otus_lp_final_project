@@ -1,0 +1,14 @@
+/var/log/rsyslog/balancer/haproxy/*
+/var/log/webserver1/apache2/*
+/var/log/webserver2/apache2/*
+{
+        rotate 4
+        daily
+        missingok
+        notifempty
+        sharedscripts
+        postrotate
+                /usr/lib/rsyslog/rsyslog-rotate
+        endscript
+}
+

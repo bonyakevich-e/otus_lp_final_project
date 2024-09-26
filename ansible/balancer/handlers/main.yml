@@ -11,3 +11,7 @@
     state: restored
     path: /etc/iptables/rules.v4
 
+- name: restart zabbix-agent
+  ansible.builtin.service:
+    name: zabbix-agent
+    state: restarted

@@ -79,3 +79,17 @@
     line: "*.* @@192.168.56.70:514"
     state: present
   notify: restart rsyslog
+
+- name: install zabbix-agent
+  tags: install_zabbix_agent
+  ansible.builtin.apt:
+    name: zabbix-agent
+    state: present
+    update_cache: true
+
+- name: import zabbix-agent config
+  tags: install_zabbix_agent
+  ansible.builtin.template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+  notify: restart zabbix-agent

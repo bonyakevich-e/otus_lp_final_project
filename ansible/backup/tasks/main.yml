@@ -67,12 +67,25 @@
     key: "{{ backup_ssh_key.stdout }}"
     comment: "backup-server"
 
-- name: create a directory for backup
+- name: deploy backup ssh key to logserver
+  tags: deploy_backup_key_to_logserver
+  delegate_to: logserver
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ backup_ssh_key.stdout }}"
+    comment: "backup-server"
+
+- name: create a directories for backup
   ansible.builtin.file:
-    path: /backup/nextcloud
+    path: "/backup/{{ item }}"
     state: directory
     mode: '0755'
     recurse: yes
+  with_items:
+    - nextcloud
+    - zabbix
+    - logserver
 
 - name: create a directory for scripts
   ansible.builtin.file:
@@ -84,22 +97,24 @@
 - name: copy backup scripts to backup-server
   tags: bac_copy_scripts
   ansible.builtin.template:
-    src: "{{ item  }}"
+    src: "{{ item }}"
     dest: /opt/scripts/
     mode: u=rwx,g=rx,o=r 
   with_items:
     - nextcloud_backup.bash
     - zabbix_backup.bash
+    - logs_backup.bash
 
 - name: copy cron tasks to backup-server
   tags: bac_copy_crons
   ansible.builtin.template:
-    src: nextcloud_backup
+    src: "{{ item }}"
     dest: /etc/cron.d/
     mode: u=rw,g=r,o=r
   with_items:
     - nextcloud_backup
     - zabbix_backup
+    - logs_backup
 
 - name: edit rsyslog config
   tags: edit_rsyslog_config
@@ -108,3 +123,17 @@
     line: "*.* @@192.168.56.70:514"
     state: present
   notify: restart rsyslog
+
+- name: install zabbix-agent
+  tags: install_zabbix_agent
+  ansible.builtin.apt:
+    name: zabbix-agent
+    state: present
+    update_cache: true
+
+- name: import zabbix-agent config
+  tags: install_zabbix_agent
+  ansible.builtin.template:
+    src: zabbix_agentd.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.conf
+  notify: restart zabbix-agent
