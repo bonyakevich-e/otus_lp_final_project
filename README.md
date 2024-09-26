@@ -4,4 +4,6 @@
 
 #### СХЕМА ПРОЕКТА:
 
-![Project scheme](https://github.com/user-attachments/assets/3420c219-6676-444b-9b0e-8d3ebfe59e2a)
+![Схема (3)](https://github.com/user-attachments/assets/32968ef9-183d-442b-9143-2b5593e6db60)
+
+
