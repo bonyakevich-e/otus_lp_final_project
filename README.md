@@ -35,3 +35,45 @@ __Краткое описание ролей:__
 11. `zabbix-restore` - восстановление сервиса Zabbix из бэкапов;
 12. `logserver` - настройка сервера сбора логов 'logserver';
 13. `backup` - настройка бэкап-сервера 'backup'
+
+При выходе из строя какого-либо сервиса в схеме восстановление выполняется запуском требуемой роли. 
+
+__Процедура восстановления сервисов__
+1. восстановление frontend-сервера `balancer`:
+```console
+ansible-playbook playbook.yml --tags="balancer" --ask-vault-pass
+```
+2. восстановление backend-сервера 'webserver1':
+```console
+ansible-playbook playbook.yml --tags="webserver1"
+ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_webserver1"
+```
+3. восстановление backend-сервера 'webserver1':
+```console
+ansible-playbook playbook.yml --tags="webserver2"
+ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_webserver2"
+```
+4. восстановление базы данных dbmaster:
+```console
+ansible-playbook playbook.yml --tags="dbmaster"
+ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_dbmaster"
+ansible-playbook playbook.yml -e "backup_date=20240920_132654" --tags="nextcloud-restore"
+```
+здесь `backup_date=20240920_132654` - дата файлов бэкапа (см. список бэкапов на бэкап-сервере) 
+
+После восстановление главной базы данных из бэкапов нужно пересоздать реплику (см. ниже 'восстановление базы данных dbslave')
+
+5. восстановление базы данных dbslave:
+```console
+ansible-playbook playbook.yml --tags="dbslave"
+ansible-playbook playbook.yml --tags="replication-setup"
+```
+6. восстановление файлового хранилища storage:
+```console
+ansible-playbook playbook.yml --tags="storage"
+ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_storage"
+ansible-playbook playbook.yml -e "backup_date=20240924_183637" --tags="nextcloud-restore"
+```
+После восстановление главной базы данных из бэкапов нужно пересоздать реплику (см. выше 'восстановление базы данных dbslave'). Так как при восстановлении файлов данных сервиса Nextcloud мы также восстанавливаем master базу данных для консистентности между базой данных и файловым хранилищем.
+
+7. 
