@@ -74,6 +74,8 @@ ansible-playbook playbook.yml --tags="storage"
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_storage"
 ansible-playbook playbook.yml -e "backup_date=20240924_183637" --tags="nextcloud-restore"
 ```
+здесь backup_date=20240920_132654 - дата файлов бэкапа (см. список бэкапов на бэкап-сервере)
+
 После восстановление главной базы данных из бэкапов нужно пересоздать реплику (см. выше 'восстановление базы данных dbslave'). Так как при восстановлении файлов данных сервиса Nextcloud мы также восстанавливаем master базу данных для консистентности между базой данных и файловым хранилищем.
 
 7. 
