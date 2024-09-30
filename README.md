@@ -43,14 +43,14 @@ __Процедура восстановления сервисов__
 ```console
 ansible-playbook playbook.yml --tags="balancer" --ask-vault-pass
 ```
-2. Восстановление backend-сервера 'webserver1':
+2. Восстановление backend-сервера `webserver1`:
 ```console
 ansible-playbook playbook.yml --tags="webserver1"
 ```
 ```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_webserver1"
 ```
-3. Восстановление backend-сервера 'webserver1':
+3. Восстановление backend-сервера `webserver2`:
 ```console
 ansible-playbook playbook.yml --tags="webserver2"
 ```
