@@ -46,17 +46,25 @@ ansible-playbook playbook.yml --tags="balancer" --ask-vault-pass
 2. Восстановление backend-сервера 'webserver1':
 ```console
 ansible-playbook playbook.yml --tags="webserver1"
+```
+```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_webserver1"
 ```
 3. Восстановление backend-сервера 'webserver1':
 ```console
 ansible-playbook playbook.yml --tags="webserver2"
+```
+```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_webserver2"
 ```
 4. Восстановление базы данных `dbmaster`:
 ```console
 ansible-playbook playbook.yml --tags="dbmaster"
+```
+```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_dbmaster"
+```
+```console
 ansible-playbook playbook.yml -e "backup_date=20240920_132654" --tags="nextcloud-restore"
 ```
 здесь `backup_date=20240920_132654` - дата бэкапа (см. список бэкапов на бэкап-сервере) 
@@ -66,12 +74,18 @@ ansible-playbook playbook.yml -e "backup_date=20240920_132654" --tags="nextcloud
 5. Восстановление базы данных `dbslave`:
 ```console
 ansible-playbook playbook.yml --tags="dbslave"
+```
+```console
 ansible-playbook playbook.yml --tags="replication-setup"
 ```
 6. Восстановление файлового хранилища `storage`:
 ```console
 ansible-playbook playbook.yml --tags="storage"
+```
+```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_storage"
+```
+```console
 ansible-playbook playbook.yml -e "backup_date=20240924_183637" --tags="nextcloud-restore"
 ```
 здесь `backup_date=20240920_132654` - дата бэкапа (см. список бэкапов на бэкап-сервере)
@@ -81,7 +95,11 @@ ansible-playbook playbook.yml -e "backup_date=20240924_183637" --tags="nextcloud
 7. Восстановление сервера мониторинга `monitoring`
 ```console
 ansible-playbook playbook.yml --tags="monitoring"
+```
+```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_monitoring"
+```
+```console
 ansible-playbook playbook.yml -e "backup_date=20240924_050001" --tags="zabbix-restore"
 ```
 здесь `backup_date=20240920_132654` - дата бэкапа (см. список бэкапов на бэкап-сервере)
@@ -89,6 +107,8 @@ ansible-playbook playbook.yml -e "backup_date=20240924_050001" --tags="zabbix-re
 8. Восстановление сервера логирования `logserver`:
 ```console
 ansible-playbook playbook.yml --tags="logserver"
+```
+```console
 ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_logserver"
 ```
 При восстановление сервера логирования логи с бэкапа не восстанавливаются. Утерянные логи можно посмотреть в бэкапе.
