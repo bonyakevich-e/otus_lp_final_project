@@ -1,6 +1,6 @@
 /var/log/rsyslog/balancer/haproxy/*
-/var/log/webserver1/apache2/*
-/var/log/webserver2/apache2/*
+/var/log/rsyslog/webserver1/apache2/*
+/var/log/rsyslog/webserver2/apache2/*
 {
         rotate 4
         daily
