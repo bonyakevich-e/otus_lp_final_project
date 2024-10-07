@@ -8,6 +8,6 @@ balancer
 `ansible-playbook playbook.yml --tags="balancer" --ask-vault-pass`
 
 
-здесь, `--ask-vault-pass` требуется для доступа к приватному ключу домена
+здесь `--ask-vault-pass` требуется для доступа к приватному ключу домена
 
 
