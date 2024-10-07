@@ -67,7 +67,7 @@ ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_
 ```console
 ansible-playbook playbook.yml -e "backup_date=20240920_132654" --tags="nextcloud-restore"
 ```
-здесь `backup_date=20240920_132654` - дата бэкапа (см. список бэкапов на бэкап-сервере) 
+здесь `backup_date=20240920_132654` - дата файла бэкапа (как она указана в имени файла на бэкап сервере) 
 
 После восстановление dbmaster нужно перенастроить репликацию (см. ниже 'восстановление базы данных dbslave')
 
@@ -88,7 +88,7 @@ ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_
 ```console
 ansible-playbook playbook.yml -e "backup_date=20240924_183637" --tags="nextcloud-restore"
 ```
-здесь `backup_date=20240920_132654` - дата бэкапа (см. список бэкапов на бэкап-сервере)
+здесь `backup_date=20240920_132654` - дата файла бэкапа (как она указана в имени файла на бэкап сервере)
 
 После восстановление главной базы данных из бэкапов нужно пересоздать реплику (см. выше 'восстановление базы данных dbslave'). Так как при восстановлении файлов данных сервиса Nextcloud мы также восстанавливаем master базу данных для консистентности между базой данных и файловым хранилищем.
 
@@ -102,7 +102,7 @@ ansible-playbook playbook.yml --tags="fetch_backup_ssh_key,deploy_backup_key_to_
 ```console
 ansible-playbook playbook.yml -e "backup_date=20240924_050001" --tags="zabbix-restore"
 ```
-здесь `backup_date=20240920_132654` - дата бэкапа (см. список бэкапов на бэкап-сервере)
+здесь `backup_date=20240920_132654` - дата файла бэкапа (как она указана в имени файла на бэкап сервере)
 
 8. Восстановление сервера логирования `logserver`:
 ```console
